@@ -21,7 +21,6 @@
     "class.extend": "~0.9.1"
   },
   "devDependencies": {
-    "node-test": "0.0.1",
     "nodeunit": "~0.8.6",
     "restify": "~2.7.0"
   }
