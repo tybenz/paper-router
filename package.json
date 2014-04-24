@@ -1,0 +1,27 @@
+{
+  "name": "router",
+  "version": "0.0.0",
+  "description": "convenience routing for restify/express",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/tybenz/paper-router"
+  },
+  "author": "Tyler Benziger",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tybenz/paper-router/issues"
+  },
+  "homepage": "https://github.com/tybenz/paper-router",
+  "scripts": {
+    "test": "node_modules/nodeunit/bin/nodeunit test"
+  },
+  "dependencies": {
+    "class.extend": "~0.9.1"
+  },
+  "devDependencies": {
+    "node-test": "0.0.1",
+    "nodeunit": "~0.8.6",
+    "restify": "~2.7.0"
+  }
+}
