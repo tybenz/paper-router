@@ -1,5 +1,5 @@
 {
-  "name": "router",
+  "name": "paper-router",
   "version": "0.0.0",
   "description": "convenience routing for restify/express",
   "main": "index.js",
@@ -13,6 +13,7 @@
     "url": "https://github.com/tybenz/paper-router/issues"
   },
   "homepage": "https://github.com/tybenz/paper-router",
+  "readmefile": "README.md",
   "scripts": {
     "test": "node_modules/nodeunit/bin/nodeunit test"
   },
