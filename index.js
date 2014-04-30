@@ -129,7 +129,6 @@ var Router = Class.extend({
                 args.push( authArg );
             }
             args.push( this.buildCallback( controller[ action ] ) );
-            console.log(method,path);
             server[ method ].apply( server, args );
         }
     }
