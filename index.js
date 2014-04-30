@@ -18,36 +18,71 @@ var Router = Class.extend({
      * Each controller should be an object with its actions as properties
      *
     */
-    init: function( server, routes, pathToControllersDir ) {
+    init: function( server, pathToControllersDir ) {
         pathToControllersDir = pathToControllersDir || __dirname + '/controllers';
-        var controllers = this.getControllers( pathToControllersDir );
+        this.controllers = this.getControllers( pathToControllersDir );
+        this.server = server;
+        var self = this;
 
-        for ( var route in routes ) {
-            if ( routes.hasOwnProperty( route ) ) {
-                var task = routes[route];
-                if ( typeof task == "string" ) {
-                    var actionParts = task.split('#');
-                    var controller = actionParts[ 0 ];
-                    var action = actionParts[ 1 ];
-                }
-                var pathParts = route.split(' ');
-                var method = pathParts[ 0 ];
-                var path = pathParts[ 1 ];
-
-                if ( method == 'resources' ) {
-                    var resource = path;
-                    var controller = controllers[ resource ];
-
-                    this.bindRoute( server, 'get', '/' + resource, controller, 'index' );
-                    this.bindRoute( server, 'get', '/' + resource + '/:id', controller, 'show' );
-                    this.bindRoute( server, 'post', '/' + resource, controller, 'create' );
-                    this.bindRoute( server, 'put', '/' + resource + '/:id', controller, 'update' );
-                    this.bindRoute( server, 'del', '/' + resource + '/:id', controller, 'destroy' );
-                } else if ( server[ method ] ) {
-                    this.bindRoute( server, method, '/' + controller + '/' + action, controllers[ controller ], action );
-                }
+        this.routes({
+            resources: function( resource ) {
+                self.resources( resource );
+            },
+            get: function( path, action ) {
+                self.get( path, action );
+            },
+            post: function( path, action ) {
+                self.get( path, action );
+            },
+            put: function(  path, action ) {
+                self.get( path, action );
+            },
+            delete: function( path, action ) {
+                self.get( path, action );
             }
-        }
+        });
+    },
+
+    resources: function( resource ) {
+        var controller = this.controllers[ resource ];
+
+        this.bindRoute( 'get', '/' + resource, controller, 'index' );
+        this.bindRoute( 'get', '/' + resource + '/:id', controller, 'show' );
+        this.bindRoute( 'post', '/' + resource, controller, 'create' );
+        this.bindRoute( 'put', '/' + resource + '/:id', controller, 'update' );
+        this.bindRoute( 'del', '/' + resource + '/:id', controller, 'destroy' );
+    },
+
+    get: function( path, action ) {
+        var controllerAction = action.split( '#' );
+        var controller = controllerAction[ 0 ];
+        action = controllerAction[ 1 ];
+
+        this.bindRoute( 'get', path, this.controllers[ controller ], action );
+    },
+
+    post: function( path, action ) {
+        var controllerAction = action.split( '#' );
+        var controller = controllerAction[ 0 ];
+        action = controllerAction[ 1 ];
+
+        this.bindRoute( 'post', path, this.controllers[ controller ], action );
+    },
+
+    put: function( path, action ) {
+        var controllerAction = action.split( '#' );
+        var controller = controllerAction[ 0 ];
+        action = controllerAction[ 1 ];
+
+        this.bindRoute( 'put', path, this.controllers[ controller ], action );
+    },
+
+    delete: function( path, action ) {
+        var controllerAction = action.split( '#' );
+        var controller = controllerAction[ 0 ];
+        action = controllerAction[ 1 ];
+
+        this.bindRoute( 'delete', path, this.controllers[ controller ], action );
     },
 
     /*
@@ -84,7 +119,7 @@ var Router = Class.extend({
      *
      * Or if you'd like to have your controllers know less about the server and
      * how to respond, you can have controllers whose actions simply return a value and
-     * wrap them with a more complicated callback see example below:
+     * wrap them with a more complicated callback see example below
      *
      */
     buildCallback: function( fn ) {
@@ -102,24 +137,11 @@ var Router = Class.extend({
     //     };
     // }
 
-    // buildCallback: function( fn ) {
-    //     return function( req, res, next ) {
-    //         var data = fn( req.params );
-    //         data.result.then( function ( modelOrCollection ) {
-    //             if ( data.callback ) {
-    //                 modelOrCollection = data.callback( modelOrCollection );
-    //             }
-
-    //             res.send( modelOrCollection );
-    //         });
-    //     };
-    // },
-
     // If you'd like to use come authentication middleware like passport,
     // you can put an 'auth' property on your controllers that need authentication
     // bindRoute will make sure to bind the right route, necessary auth, and the callback
     // to whatever http method is specified
-    bindRoute: function( server, method, path, controller, action) {
+    bindRoute: function( method, path, controller, action) {
         if ( controller && controller[ action ] ) {
             var args = [],
                 authArg;
@@ -129,8 +151,12 @@ var Router = Class.extend({
                 args.push( authArg );
             }
             args.push( this.buildCallback( controller[ action ] ) );
-            server[ method ].apply( server, args );
+            this.server[ method ].apply( this.server, args );
         }
+    },
+
+    // TO be overridden
+    routes: function( route ) {
     }
 });
 
