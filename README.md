@@ -15,41 +15,46 @@ var restify = require( 'restify' ); // could also be express
 var server = server.createServer();
 
 // See notes below on what the routes object should look like
-var routes = {
-    'resources foo': true
-    'get /bar/#baz': 'bar#baz'
+var routes = function( router ) {
+    router.resources( 'foo' );
+    router.get( '/bar/baz', 'bar#baz' );
 }
 
 // Sets up routes on the actual server using the routes object
-var router = new Router( server, routes, __dirname + '/controllers' );
+var router = new Router( server, __dirname + '/controllers', routes );
 ```
 
 ## How it works
 
-Takes in a server, a path to a directory full of controller files,
-and a routes object that looks like this:
+A router takes in a server and a path to a directory full of controller files
+and a routes function that can use the appropriate methods to declare routes
+e.g.:
 
 ```javascript
-routes = {
-    'resources foo': true,
-    'get /foo/bar': 'controller#action'
-}
+new Router(
+    server,
+    __dirname + '/controllers',
+    function( router ) {
+        router.resources( 'foo' );
+        router.get( '/foo/bar', 'controller#action' );
+    }
+);
 ```
 
-Either a route will specify a "resource" - controller that maps to CRUD methods
-Or it can have an explicit mapping between an arbitrary route and
-a controller/action combo
+Route declarations can either specify a "resource" - controller that
+maps to CRUD methods, or it can have an explicit mapping between an
+arbitrary route and a controller#action combo
 
-Each controller should be an object with its actions as properties
+Each controller should be an object with its actions as properties:
 
-e.g.
 ```javascript
 var FooController = {
-    bar: function( req, res, next ) {
-      res.send( { foo: 'bar' } );
+    index: function( req, res, next ) {
+        res.send( 'foo' );
     }
 };
 ```
+
 
 ## buildCallback
 
@@ -80,3 +85,36 @@ var CustomRouter = Router.extend({
     }
 });
 ```
+
+## Authentication middleware
+If you'd like to use some authentication middleware like
+[passport](https://github.com/jaredhanson/passport), you can put an `auth`
+property on your controllers that need authentication.  The `bindRoute` method
+will make sure to bind the right route, necessary auth, and the callback to
+whatever express/restify method is specified.
+
+Typical route binding in express/restify looks like this:
+
+```javascript
+server.get( '/foo', function( req, res, next ) {
+    res.send( 'foo' );
+});
+```
+
+With passport it might look like this:
+
+```javascript
+var authCallback = function() {
+    return passport.authenticate( 'basic', { session: false } );
+}
+
+server.get( '/foo', authCallback, function( req, res, next ) {
+    passport.authenticate( 'basic', { session: false } );
+    res.send( 'foo' );
+});
+```
+
+If there is an auth property set on your controller it will be passed as the
+second argument to the routing method. If there isn't one, no auth callback
+will be passed and the second argument will be your route callback - business
+as usual.

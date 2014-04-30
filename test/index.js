@@ -7,13 +7,11 @@ exports.regularRoutesAndControllers = function( test ) {
         version: '0.0.0'
     });
 
-    var Router = require( '../' ).extend({
-        routes: function( router ) {
-            router.resources( 'foo' );
-            router.get( '/bar/baz', 'bar#baz' );
-        }
-    })
-    var router = new Router( this.server, __dirname + '/controllers' );
+    var Router = require( '../' );
+    var router = new Router( this.server, __dirname + '/controllers', function( router ) {
+        router.resources( 'foo' );
+        router.get( '/bar/baz', 'bar#baz' );
+    });
 
     var count = 0;
 
@@ -77,11 +75,6 @@ exports.simpleRoutesAndControllers = function( test ) {
 
 
     var CustomRouter = require( '../' ).extend({
-        routes: function( router ) {
-            router.resources( 'foo' );
-            router.get( '/bar/baz', 'bar#baz' );
-        },
-
         buildCallback: function ( fn ) {
             return function( req, res, next ) {
                 var result = fn( req.params );
@@ -89,7 +82,10 @@ exports.simpleRoutesAndControllers = function( test ) {
             }
         }
     });
-    var router = new CustomRouter( this.server, __dirname + '/simple_controllers' );
+    var router = new CustomRouter( this.server, __dirname + '/simple_controllers', function( router ) {
+        router.resources( 'foo' );
+        router.get( '/bar/baz', 'bar#baz' );
+    });
 
     var count = 0;
 
@@ -151,13 +147,11 @@ exports.nestedRoutesAndControllers = function( test ) {
         version: '0.0.0'
     });
 
-    var Router = require( '../' ).extend({
-        routes: function( router ) {
-            router.resources( 'foo' );
-            router.get( '/bar/baz', 'bar#baz' );
-        }
+    var Router = require( '../' );
+    var router = new Router( this.server, __dirname + '/nested/controllers', function ( router ) {
+        router.resources( 'foo' );
+        router.get( '/bar/baz', 'bar#baz' );
     });
-    var router = new Router( this.server, __dirname + '/nested/controllers' );
 
     var count = 0;
 

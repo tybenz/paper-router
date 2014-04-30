@@ -3,25 +3,39 @@ var Class = require( 'class.extend' );
 
 var Router = Class.extend({
     /*
-     * Takes in a server, a path to a directory full of controller files,
-     * and a routes object that looks like this:
+     * Takes in a server and a path to a directory full of controller files
+     * and a routes function that can use the appropriate methods to declare routes
+     * e.g.:
      *
-     * routes = {
-     *     'resources foo': true,
-     *     'get /foo/bar': 'controller#action'
-     * }
+     * new Router(
+     *     server,
+     *     __dirname + '/controllers',
+     *     function( router ) {
+     *         router.resources( 'foo' );
+     *         router.get( '/foo/bar', 'controller#action' );
+     *     }
+     * );
      *
-     * Either it will specify a "resource" - controller that maps to CRUD methods
-     * Or it can have an explicit mapping between an arbitrary route and
-     * a controller/action combo
+     *
+     * Route declarations can either specify a "resource" - controller that
+     * maps to CRUD methods, or it can have an explicit mapping between an
+     * arbitrary route and a controller#action combo
      *
      * Each controller should be an object with its actions as properties
+     * e.g.:
+     *
+     * var FooController = {
+     *     index: function( req, res, next ) {
+     *         res.send( 'foo' );
+     *     }
+     * };
      *
     */
-    init: function( server, pathToControllersDir ) {
+    init: function( server, pathToControllersDir, routes ) {
         pathToControllersDir = pathToControllersDir || __dirname + '/controllers';
         this.controllers = this.getControllers( pathToControllersDir );
         this.server = server;
+        this.routes = routes;
         var self = this;
 
         this.routes({
@@ -43,16 +57,25 @@ var Router = Class.extend({
         });
     },
 
+    /*
+     * Shorthand for CRUD methods and a few other commonly used routes
+     * for resourcesful web apps
+    */
     resources: function( resource ) {
         var controller = this.controllers[ resource ];
 
         this.bindRoute( 'get', '/' + resource, controller, 'index' );
         this.bindRoute( 'get', '/' + resource + '/:id', controller, 'show' );
+        this.bindRoute( 'get', '/' + resource + '/new', controller, 'new' );
+        this.bindRoute( 'get', '/' + resource + '/:id/edit', controller, 'edit' );
         this.bindRoute( 'post', '/' + resource, controller, 'create' );
         this.bindRoute( 'put', '/' + resource + '/:id', controller, 'update' );
         this.bindRoute( 'del', '/' + resource + '/:id', controller, 'destroy' );
     },
 
+    /*
+     * GET, POST, PUT, and DELETE
+    */
     get: function( path, action ) {
         var controllerAction = action.split( '#' );
         var controller = controllerAction[ 0 ];
@@ -126,21 +149,26 @@ var Router = Class.extend({
         return fn;
     },
 
-    // The following is an example of a more complicated buildCallback
-    // this is simply a method to abstract how much the controller knows about the server
-    // I tend to write my controllers to be more utilitarian. So I can call them from different parts
-    // of my application to retrieve data. The networking stuff can be moved into the router
-    // buidCallback: function ( fn ) {
-    //     return function( req, res, next ) {
-    //         var result = fn();
-    //         res.send( result );
-    //     };
-    // }
+    /*
+     * The following is an example of a more complicated buildCallback
+     * this is simply a method to abstract how much the controller knows about the server
+     * I tend to write my controllers to be more utilitarian. So I can call them from different parts
+     * of my application to retrieve data. The networking stuff can be moved into the router
+     *
+     * buidCallback: function ( fn ) {
+     *     return function( req, res, next ) {
+     *         var result = fn();
+     *         res.send( result );
+     *     };
+     * }
+    */
 
-    // If you'd like to use come authentication middleware like passport,
-    // you can put an 'auth' property on your controllers that need authentication
-    // bindRoute will make sure to bind the right route, necessary auth, and the callback
-    // to whatever http method is specified
+    /*
+     * If you'd like to use some authentication middleware like passport,
+     * you can put an 'auth' property on your controllers that need authentication
+     * bindRoute will make sure to bind the right route, necessary auth, and the callback
+     * to whatever http method is specified
+    */
     bindRoute: function( method, path, controller, action) {
         if ( controller && controller[ action ] ) {
             var args = [],
@@ -153,10 +181,6 @@ var Router = Class.extend({
             args.push( this.buildCallback( controller[ action ] ) );
             this.server[ method ].apply( this.server, args );
         }
-    },
-
-    // TO be overridden
-    routes: function( route ) {
     }
 });
 
