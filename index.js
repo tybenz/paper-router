@@ -46,13 +46,13 @@ var Router = Class.extend({
                 self.get( path, action );
             },
             post: function( path, action ) {
-                self.get( path, action );
+                self.post( path, action );
             },
             put: function(  path, action ) {
-                self.get( path, action );
+                self.put( path, action );
             },
             delete: function( path, action ) {
-                self.get( path, action );
+                self.delete( path, action );
             }
         });
     },
