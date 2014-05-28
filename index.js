@@ -39,8 +39,8 @@ var Router = Class.extend({
         var self = this;
 
         this.routes({
-            resources: function( resource ) {
-                self.resources( resource );
+            resources: function( resource, prefixRoute ) {
+                self.resources( resource, prefixRoute );
             },
             get: function( path, action ) {
                 self.get( path, action );
@@ -61,16 +61,16 @@ var Router = Class.extend({
      * Shorthand for CRUD methods and a few other commonly used routes
      * for resourcesful web apps
     */
-    resources: function( resource ) {
+    resources: function( resource, prefixRoute ) {
         var controller = this.controllers[ resource ];
 
-        this.bindRoute( 'get', '/' + resource, controller, 'index' );
-        this.bindRoute( 'get', '/' + resource + '/:id', controller, 'show' );
-        this.bindRoute( 'get', '/' + resource + '/new', controller, 'new' );
-        this.bindRoute( 'get', '/' + resource + '/:id/edit', controller, 'edit' );
-        this.bindRoute( 'post', '/' + resource, controller, 'create' );
-        this.bindRoute( 'put', '/' + resource + '/:id', controller, 'update' );
-        this.bindRoute( 'del', '/' + resource + '/:id', controller, 'destroy' );
+        this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + resource, controller, 'index' );
+        this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + resource + '/:id', controller, 'show' );
+        this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + resource + '/new', controller, 'new' );
+        this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + resource + '/:id/edit', controller, 'edit' );
+        this.bindRoute( 'post', ( prefixRoute || "" ) + '/' + resource, controller, 'create' );
+        this.bindRoute( 'put', ( prefixRoute || "" ) + '/' + resource + '/:id', controller, 'update' );
+        this.bindRoute( 'del', ( prefixRoute || "" ) + '/' + resource + '/:id', controller, 'destroy' );
     },
 
     /*
