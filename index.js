@@ -51,8 +51,8 @@ var Router = Class.extend({
             put: function(  path, action ) {
                 self.put( path, action );
             },
-            delete: function( path, action ) {
-                self.delete( path, action );
+            del: function( path, action ) {
+                self.del( path, action );
             }
         });
     },
@@ -100,12 +100,12 @@ var Router = Class.extend({
         this.bindRoute( 'put', path, this.controllers[ controller ], action );
     },
 
-    delete: function( path, action ) {
+    del: function( path, action ) {
         var controllerAction = action.split( '#' );
         var controller = controllerAction[ 0 ];
         action = controllerAction[ 1 ];
 
-        this.bindRoute( 'delete', path, this.controllers[ controller ], action );
+        this.bindRoute( 'del', path, this.controllers[ controller ], action );
     },
 
     /*
