@@ -178,7 +178,7 @@ var Router = Class.extend({
             if ( authArg = controller.auth ? controller.auth( action ) : null ) {
                 args.push( authArg );
             }
-            args.push( this.buildCallback( controller[ action ] ) );
+            args.push( this.buildCallback( controller[ action ] ).bind( controller ) );
             this.server[ method ].apply( this.server, args );
         }
     }
