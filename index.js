@@ -31,16 +31,17 @@ var Router = Class.extend({
      * };
      *
     */
-    init: function( server, pathToControllersDir, routes ) {
+    init: function( server, pathToControllersDir, routes, versioned ) {
         pathToControllersDir = pathToControllersDir || __dirname + '/controllers';
-        this.controllers = this.getControllers( pathToControllersDir );
         this.server = server;
         this.routes = routes;
+        this.versioned = versioned;
+        this.controllers = this.getControllers( pathToControllersDir );
         var self = this;
 
         this.routes({
-            resources: function( resource, prefixRoute ) {
-                self.resources( resource, prefixRoute );
+            resources: function( resource, prefixRoute, version ) {
+                self.resources( resource, prefixRoute, version );
             },
             get: function( path, action ) {
                 self.get( path, action );
@@ -61,8 +62,12 @@ var Router = Class.extend({
      * Shorthand for CRUD methods and a few other commonly used routes
      * for resourcesful web apps
     */
-    resources: function( resource, prefixRoute ) {
-        var controller = this.controllers[ resource ];
+    resources: function( resource, prefixRoute, version ) {
+        if ( version ) {
+            console.log(this.controllers);
+            console.log(resource + (version ? ':' + version : ''));
+        }
+        var controller = this.controllers[ resource + ( version ? ':' + version : '' ) ];
 
         this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + resource, controller, 'index' );
         this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + resource + '/:id', controller, 'show' );
@@ -117,11 +122,35 @@ var Router = Class.extend({
         var controllerList = fs.readdirSync( pathToControllersDir );
 
         for ( var i = 0, len = controllerList.length; i < len; i++ ) {
-            var controller = controllerList[i];
-            // if the file name doesn't start with '.' and ends with '.js'
-            // add the controller to our lookup table of all controllers
-            if ( controller.charAt(0) != '.' && controller.match( /\.js$/ ) ) {
-                controllers[ controller.replace( /\.js$/, '' ) ] = require( pathToControllersDir + '/' + controller );
+            var file = controllerList[ i ];
+            if ( this.versioned ) {
+                // If the versioned flag is set, the original controller list
+                // is actually a list of folders which should be named after
+                // their versions and shoulf contain controller files
+                if ( fs.lstatSync( pathToControllersDir + '/' + file ).isDirectory() ) {
+                    var version = file;
+                    var controllerList2 = fs.readdirSync( pathToControllersDir + '/' + version );
+
+                    for ( var j = 0, len = controllerList2.length; j < len; j++ ) {
+                        var file = controllerList2[ j ];
+
+                        // if the file name doesn't start with '.' and ends with '.js'
+                        // add the controller to our lookup table of all controllers
+                        if ( file.charAt(0) != '.' && file.match( /\.js$/ ) ) {
+                            // In the versioned case we save the controller to
+                            // a property named controller:version
+                            // e.g. 'users:v0'
+                            controllers[ file.replace( /\.js$/, '' ) + ':' + version ] = require( pathToControllersDir + '/' + version + '/' + file );
+                        }
+                    }
+
+                }
+            } else {
+                // if the file name doesn't start with '.' and ends with '.js'
+                // add the controller to our lookup table of all controllers
+                if ( file.charAt(0) != '.' && file.match( /\.js$/ ) ) {
+                    controllers[ file.replace( /\.js$/, '' ) ] = require( pathToControllersDir + '/' + file );
+                }
             }
         }
 
