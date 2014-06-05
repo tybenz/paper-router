@@ -64,9 +64,93 @@ var FooController = {
 ```
 
 
+## Versioning
+
+If you're building an API with Express or Restify that needs to support
+versioning, paper-router can help set up your codebase.
+
+Instead of providing paper-router a path to a directory of controllers, give it
+a path to a directory of version folders, each who have their own versions of
+the controllers. The version folders must begin with a 'v' and be followed by
+an integer (sorry semver freaks).
+
+Example directory structure:
+
+```python
+|-- src
+|   |-- controllers
+|   |   |-- v0
+|   |   |   |-- users.js
+|   |   |   |-- bananas.js
+|   |   |   |-- peels.js
+|   |   |-- v1
+|   |   |   |-- users.js
+|   |   |   |-- bananas.js
+|   |   |   |-- peels.js
+```
+
+Example of instantiating paper router:
+
+```javascript
+var server = require( 'server' );
+var PaperRouter = require( 'paper-router' );
+
+var routes = function( router ) {
+  router.resources( 'users', '/v0', 'v0' );
+  router.resources( 'bananas', '/v0', 'v0' );
+  router.resources( 'peels', '/v0', 'v0' );
+
+  router.resources( 'users', '/v1', 'v1' );
+  router.resources( 'bananas', '/v1', 'v1' );
+  router.resources( 'peels', '/v1', 'v1' );
+};
+
+var router = new PaperRouter(
+    server,
+    __dirname + './controllers', // path to directory of version folders
+    routes,
+    true // indicates controllerDir contains version folders
+);
+
+server.listen( 3000, function() {
+    console.log( 'SERVER STARTED!' );
+});
+```
+
+How or if you handle any shared logic/fallbacks between
+versions is up to you.
+
+Here's an example of a v1 `BananasController` which falls back to using the v0
+`BananasController` actions if new ones are not defined:
+
+```javascript
+var _ = require( 'lodash-node' );
+var v0 = require( '../v0/bananas.js' );
+
+var BananasController = _.extend( {}, v0, {
+    index: function( req, res, next ) {
+        res.send( { message: 'Under construction' } );
+    }
+});
+
+module.exports = BananasController;
+```
+
+The `index` action is the only thing that changed from v0 to v1. Any other actions
+that v0 has that v1 does not will be set up correctly if the same routes are
+bound for both v0 and v1.
+
+Here the "inheritance" or shared logic is totally up the user. Paper-router
+just wires up the routes for you, as long as you tell it where to look.
+
+Note that with this method, I still have to have a controller file in every
+version folder. Paper router will not go an find an older controller. The
+mirror has to be set up manually for each version.
+
+
 ## buildCallback
 
-This method is meant to be over-written
+This method is meant to be over-written.
 It should return a function to be bound to the server's route mechanism
 Example: In express routes are done like this:
 
