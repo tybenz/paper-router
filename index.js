@@ -63,10 +63,6 @@ var Router = Class.extend({
      * for resourcesful web apps
     */
     resources: function( resource, prefixRoute, version ) {
-        if ( version ) {
-            console.log(this.controllers);
-            console.log(resource + (version ? ':' + version : ''));
-        }
         var controller = this.controllers[ resource + ( version ? ':' + version : '' ) ];
 
         this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + resource, controller, 'index' );
