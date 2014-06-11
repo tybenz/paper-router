@@ -43,17 +43,17 @@ var Router = Class.extend({
             resources: function( resource, prefixRoute, version ) {
                 self.resources( resource, prefixRoute, version );
             },
-            get: function( path, action ) {
-                self.get( path, action );
+            get: function( path, action, version ) {
+                self.get( path, action, version );
             },
-            post: function( path, action ) {
-                self.post( path, action );
+            post: function( path, action, version ) {
+                self.post( path, action, version );
             },
-            put: function(  path, action ) {
-                self.put( path, action );
+            put: function(  path, action, version ) {
+                self.put( path, action, version );
             },
-            del: function( path, action ) {
-                self.del( path, action );
+            del: function( path, action, version ) {
+                self.del( path, action, version );
             }
         });
     },
@@ -77,36 +77,36 @@ var Router = Class.extend({
     /*
      * GET, POST, PUT, and DELETE
     */
-    get: function( path, action ) {
+    get: function( path, action, version ) {
         var controllerAction = action.split( '#' );
         var controller = controllerAction[ 0 ];
         action = controllerAction[ 1 ];
 
-        this.bindRoute( 'get', path, this.controllers[ controller ], action );
+        this.bindRoute( 'get', path, this.controllers[ controller + ( version ? ':' + version : '' ) ], action );
     },
 
-    post: function( path, action ) {
+    post: function( path, action, version ) {
         var controllerAction = action.split( '#' );
         var controller = controllerAction[ 0 ];
         action = controllerAction[ 1 ];
 
-        this.bindRoute( 'post', path, this.controllers[ controller ], action );
+        this.bindRoute( 'post', path, this.controllers[ controller + ( version ? ':' + version : '' ) ], action );
     },
 
-    put: function( path, action ) {
+    put: function( path, action, version ) {
         var controllerAction = action.split( '#' );
         var controller = controllerAction[ 0 ];
         action = controllerAction[ 1 ];
 
-        this.bindRoute( 'put', path, this.controllers[ controller ], action );
+        this.bindRoute( 'put', path, this.controllers[ controller + ( version ? ':' + version : '' ) ], action );
     },
 
-    del: function( path, action ) {
+    del: function( path, action, version ) {
         var controllerAction = action.split( '#' );
         var controller = controllerAction[ 0 ];
         action = controllerAction[ 1 ];
 
-        this.bindRoute( 'del', path, this.controllers[ controller ], action );
+        this.bindRoute( 'del', path, this.controllers[ controller + ( version ? ':' + version : '' ) ], action );
     },
 
     /*
