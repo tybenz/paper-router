@@ -201,7 +201,7 @@ var Router = Class.extend({
 
             args.push( path );
             if ( controller.pre ) {
-                args.push( controller.pre );
+                args.push( controller.pre.bind( controller ) );
             }
             if ( authArg = controller.auth ? controller.auth( action ) : null ) {
                 args.push( authArg );
