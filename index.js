@@ -54,6 +54,9 @@ var Router = Class.extend({
             },
             del: function( path, action, version ) {
                 self.del( path, action, version );
+            },
+            delete: function( path, action, version ) {
+                self.delete( path, action, version );
             }
         });
     },
@@ -72,6 +75,7 @@ var Router = Class.extend({
         this.bindRoute( 'post', ( prefixRoute || "" ) + '/' + resource, controller, 'create' );
         this.bindRoute( 'put', ( prefixRoute || "" ) + '/' + resource + '/:id', controller, 'update' );
         this.bindRoute( 'del', ( prefixRoute || "" ) + '/' + resource + '/:id', controller, 'destroy' );
+        this.bindRoute( 'delete', ( prefixRoute || "" ) + '/' + resource + '/:id', controller, 'destroy' );
     },
 
     /*
@@ -107,6 +111,14 @@ var Router = Class.extend({
         action = controllerAction[ 1 ];
 
         this.bindRoute( 'del', path, this.controllers[ controller + ( version ? ':' + version : '' ) ], action );
+    },
+
+    delete: function( path, action, version ) {
+        var controllerAction = action.split( '#' );
+        var controller = controllerAction[ 0 ];
+        action = controllerAction[ 1 ];
+
+        this.bindRoute( 'delete', path, this.controllers[ controller + ( version ? ':' + version : '' ) ], action );
     },
 
     /*
