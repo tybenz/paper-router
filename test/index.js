@@ -79,7 +79,7 @@ exports.simpleRoutesAndControllers = function( test ) {
             return function( req, res, next ) {
                 var result = fn( req.params );
                 res.send( result );
-            }
+            };
         }
     });
     var router = new CustomRouter( this.server, __dirname + '/simple_controllers', function( router ) {
@@ -204,6 +204,29 @@ exports.nestedRoutesAndControllers = function( test ) {
     });
 };
 
+exports.pathHelpers = function( test ) {
+    test.expect( 5 );
+    var restify = require( 'restify' );
+
+    var client = restify.createJsonClient({
+        url: 'http://localhost:8888',
+        version: '0.0.0'
+    });
+
+    var Router = require( '../' );
+    var router = new Router( this.server, __dirname + '/controllers', function( router ) {
+        router.resources( 'bananas' );
+        router.get( '/bar/baz', 'bar#baz', undefined, 'welcome' );
+    });
+
+    test.ok( router.bananasPath() == '/bananas' );
+    test.ok( router.bananaPath( 1 ) == '/bananas/1' );
+    test.ok( router.newBananaPath() == '/bananas/new' );
+    test.ok( router.editBananaPath( 1 ) == '/bananas/1/edit' );
+    test.ok( router.welcomePath() == '/bar/baz' );
+    test.done();
+};
+
 exports.setUp = function( callback ) {
     var restify = require( 'restify' );
     this.server = restify.createServer({
@@ -220,6 +243,7 @@ exports.setUp = function( callback ) {
 };
 
 exports.tearDown = function( callback ) {
+    console.log( 'TEARDOWN' );
     this.server.close();
     callback();
 };

@@ -1,5 +1,6 @@
 var fs = require( 'fs' );
 var Class = require( 'class.extend' );
+var inflect = require( 'i' )();
 
 var Router = Class.extend({
     /*
@@ -33,6 +34,7 @@ var Router = Class.extend({
     */
     init: function( server, pathToControllersDir, routes, versioned ) {
         pathToControllersDir = pathToControllersDir || __dirname + '/controllers';
+        this._routes = {};
         this.server = server;
         this.routes = routes;
         this.versioned = versioned;
@@ -40,23 +42,23 @@ var Router = Class.extend({
         var self = this;
 
         this.routes({
-            resources: function( resource, prefixRoute, version ) {
+            resources: function( resource, prefixRoute, version, as ) {
                 self.resources( resource, prefixRoute, version );
             },
-            get: function( path, action, version ) {
-                self.get( path, action, version );
+            get: function( path, action, version, as ) {
+                self.get( path, action, version, as );
             },
-            post: function( path, action, version ) {
-                self.post( path, action, version );
+            post: function( path, action, version, as ) {
+                self.post( path, action, version, as );
             },
-            put: function(  path, action, version ) {
-                self.put( path, action, version );
+            put: function( path, action, version, as ) {
+                self.put( path, action, version, as );
             },
-            del: function( path, action, version ) {
-                self.del( path, action, version );
+            del: function( path, action, version, as ) {
+                self.del( path, action, version, as );
             },
-            delete: function( path, action, version ) {
-                self.delete( path, action, version );
+            delete: function( path, action, version, as ) {
+                self.delete( path, action, version, as );
             }
         });
     },
@@ -65,60 +67,66 @@ var Router = Class.extend({
      * Shorthand for CRUD methods and a few other commonly used routes
      * for resourcesful web apps
     */
-    resources: function( resource, prefixRoute, version ) {
+    resources: function( resource, prefixRoute, version, as ) {
         var controller = this.controllers[ resource + ( version ? ':' + version : '' ) ];
+        var singular = as ? inflect.singularize( as ) : inflect.singularize( resource );
+        var cap = function( str ) {
+            return str.charAt( 0 ).toUpperCase() + str.slice( 1 );
+        };
 
-        this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + resource, controller, 'index' );
-        this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + resource + '/:id', controller, 'show' );
-        this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + resource + '/new', controller, 'new' );
-        this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + resource + '/:id/edit', controller, 'edit' );
+        this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + resource, controller, 'index', as || resource );
+        this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + resource + '/:id', controller, 'show', singular );
+        this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + resource + '/new', controller, 'new', 'new' + cap( singular) );
+        this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + resource + '/:id/edit', controller, 'edit', 'edit' + cap( singular ) );
         this.bindRoute( 'post', ( prefixRoute || "" ) + '/' + resource, controller, 'create' );
         this.bindRoute( 'put', ( prefixRoute || "" ) + '/' + resource + '/:id', controller, 'update' );
         this.bindRoute( 'del', ( prefixRoute || "" ) + '/' + resource + '/:id', controller, 'destroy' );
-        this.bindRoute( 'delete', ( prefixRoute || "" ) + '/' + resource + '/:id', controller, 'destroy' );
+        if ( this.server.delete ) {
+            this.bindRoute( 'delete', ( prefixRoute || "" ) + '/' + resource + '/:id', controller, 'destroy' );
+        }
     },
 
     /*
      * GET, POST, PUT, and DELETE
     */
-    get: function( path, action, version ) {
+    get: function( path, action, version, as ) {
         var controllerAction = action.split( '#' );
         var controller = controllerAction[ 0 ];
         action = controllerAction[ 1 ];
 
-        this.bindRoute( 'get', path, this.controllers[ controller + ( version ? ':' + version : '' ) ], action );
+        this.bindRoute( 'get', path, this.controllers[ controller + ( version ? ':' + version : '' ) ], action, as );
     },
 
-    post: function( path, action, version ) {
+    post: function( path, action, version, as ) {
         var controllerAction = action.split( '#' );
         var controller = controllerAction[ 0 ];
         action = controllerAction[ 1 ];
 
-        this.bindRoute( 'post', path, this.controllers[ controller + ( version ? ':' + version : '' ) ], action );
+        this.bindRoute( 'post', path, this.controllers[ controller + ( version ? ':' + version : '' ) ], action, as );
     },
 
-    put: function( path, action, version ) {
+    put: function( path, action, version, as ) {
         var controllerAction = action.split( '#' );
         var controller = controllerAction[ 0 ];
         action = controllerAction[ 1 ];
 
-        this.bindRoute( 'put', path, this.controllers[ controller + ( version ? ':' + version : '' ) ], action );
+        this.bindRoute( 'put', path, this.controllers[ controller + ( version ? ':' + version : '' ) ], action, as );
     },
 
-    del: function( path, action, version ) {
+    del: function( path, action, version, as ) {
         var controllerAction = action.split( '#' );
         var controller = controllerAction[ 0 ];
         action = controllerAction[ 1 ];
 
-        this.bindRoute( 'del', path, this.controllers[ controller + ( version ? ':' + version : '' ) ], action );
+        this.bindRoute( 'del', path, this.controllers[ controller + ( version ? ':' + version : '' ) ], action, as );
     },
 
-    delete: function( path, action, version ) {
+    delete: function( path, action, version, as ) {
         var controllerAction = action.split( '#' );
         var controller = controllerAction[ 0 ];
         action = controllerAction[ 1 ];
 
-        this.bindRoute( 'delete', path, this.controllers[ controller + ( version ? ':' + version : '' ) ], action );
+        this.bindRoute( 'delete', path, this.controllers[ controller + ( version ? ':' + version : '' ) ], action, as );
     },
 
     /*
@@ -199,6 +207,28 @@ var Router = Class.extend({
      *     };
      * }
     */
+    pathHelper: function() {
+        var path = this.path;
+        var regex = /\:[^\/\*]+/g;
+        var lastIndex = 0;
+        var newPath = '';
+        var count = 0;
+        var arg;
+
+        while( match = regex.exec( path ) ) {
+            newPath += path.substring( lastIndex, match.index )
+            if ( arg = arguments[ count ] ) {
+                newPath += typeof arg !== 'object' ? arg : arg.toPath();
+            } else {
+                throw new Error( 'Path helper must be called with same number of arguments as the path\'s parameters' );
+            }
+            lastIndex = match.index + match[ 0 ].length;
+            count++;
+        }
+        newPath += path.substring( lastIndex );
+
+        return newPath;
+    },
 
     /*
      * If you'd like to use some authentication middleware like passport,
@@ -206,7 +236,7 @@ var Router = Class.extend({
      * bindRoute will make sure to bind the right route, necessary auth, and the callback
      * to whatever http method is specified
     */
-    bindRoute: function( method, path, controller, action) {
+    bindRoute: function( method, path, controller, action, as ) {
         if ( controller && controller[ action ] ) {
             var args = [],
                 authArg;
@@ -220,6 +250,10 @@ var Router = Class.extend({
             }
             args.push( this.buildCallback( controller[ action ] ).bind( controller ) );
             this.server[ method ].apply( this.server, args );
+
+            if ( as ) {
+                this[ as + 'Path' ] = this.pathHelper.bind( { path: path } );
+            }
         }
     }
 });

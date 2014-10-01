@@ -1,6 +1,6 @@
 {
   "name": "paper-router",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "convenience routing for restify/express",
   "main": "index.js",
   "repository": {
@@ -18,7 +18,8 @@
     "test": "node_modules/nodeunit/bin/nodeunit test"
   },
   "dependencies": {
-    "class.extend": "~0.9.1"
+    "class.extend": "~0.9.1",
+    "i": "~0.3.2"
   },
   "devDependencies": {
     "nodeunit": "~0.8.6",
