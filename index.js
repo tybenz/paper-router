@@ -42,23 +42,23 @@ var Router = Class.extend({
         var self = this;
 
         this.routes({
-            resources: function( resource, prefixRoute, version, as ) {
-                self.resources( resource, prefixRoute, version );
+            resources: function( resource, options ) {
+                self.resources( resource, options );
             },
-            get: function( path, action, version, as ) {
-                self.get( path, action, version, as );
+            get: function( path, action, options ) {
+                self.get( path, action, options );
             },
-            post: function( path, action, version, as ) {
-                self.post( path, action, version, as );
+            post: function( path, action, options ) {
+                self.post( path, action, options );
             },
-            put: function( path, action, version, as ) {
-                self.put( path, action, version, as );
+            put: function( path, action, options ) {
+                self.put( path, action, options );
             },
-            del: function( path, action, version, as ) {
-                self.del( path, action, version, as );
+            del: function( path, action, options ) {
+                self.del( path, action, options );
             },
-            delete: function( path, action, version, as ) {
-                self.delete( path, action, version, as );
+            delete: function( path, action, options ) {
+                self.delete( path, action, options );
             }
         });
     },
@@ -67,66 +67,76 @@ var Router = Class.extend({
      * Shorthand for CRUD methods and a few other commonly used routes
      * for resourcesful web apps
     */
-    resources: function( resource, prefixRoute, version, as ) {
+    resources: function( resource, options ) {
+        options = options || {};
         var controller = this.controllers[ resource + ( version ? ':' + version : '' ) ];
+        var version = options.version;
+        var prefixRoute = options.prefixRoute;
+        var path = options.path;
+        var as = options.as;
         var singular = as ? inflect.singularize( as ) : inflect.singularize( resource );
         var cap = function( str ) {
             return str.charAt( 0 ).toUpperCase() + str.slice( 1 );
         };
 
-        this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + resource, controller, 'index', as || resource );
-        this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + resource + '/:id', controller, 'show', singular );
-        this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + resource + '/new', controller, 'new', 'new' + cap( singular) );
-        this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + resource + '/:id/edit', controller, 'edit', 'edit' + cap( singular ) );
-        this.bindRoute( 'post', ( prefixRoute || "" ) + '/' + resource, controller, 'create' );
-        this.bindRoute( 'put', ( prefixRoute || "" ) + '/' + resource + '/:id', controller, 'update' );
-        this.bindRoute( 'del', ( prefixRoute || "" ) + '/' + resource + '/:id', controller, 'destroy' );
+        this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + ( path || resource ), controller, 'index', as || resource );
+        this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + ( path || resource ) + '/new', controller, 'new', 'new' + cap( singular) );
+        this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + ( path || resource ) + '/:id', controller, 'show', singular );
+        this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + ( path || resource ) + '/:id/edit', controller, 'edit', 'edit' + cap( singular ) );
+        this.bindRoute( 'post', ( prefixRoute || "" ) + '/' + ( path || resource ), controller, 'create' );
+        this.bindRoute( 'put', ( prefixRoute || "" ) + '/' + ( path || resource ) + '/:id', controller, 'update' );
+        this.bindRoute( 'del', ( prefixRoute || "" ) + '/' + ( path || resource ) + '/:id', controller, 'destroy' );
         if ( this.server.delete ) {
-            this.bindRoute( 'delete', ( prefixRoute || "" ) + '/' + resource + '/:id', controller, 'destroy' );
+            this.bindRoute( 'delete', ( prefixRoute || "" ) + '/' + ( path || resource ) + '/:id', controller, 'destroy' );
         }
     },
 
     /*
      * GET, POST, PUT, and DELETE
     */
-    get: function( path, action, version, as ) {
+    get: function( path, action, options ) {
+        options = options || {};
         var controllerAction = action.split( '#' );
         var controller = controllerAction[ 0 ];
         action = controllerAction[ 1 ];
 
-        this.bindRoute( 'get', path, this.controllers[ controller + ( version ? ':' + version : '' ) ], action, as );
+        this.bindRoute( 'get', path, this.controllers[ controller + ( options.version ? ':' + options.version : '' ) ], action, options.as );
     },
 
-    post: function( path, action, version, as ) {
+    post: function( path, action, options ) {
+        options = options || {};
         var controllerAction = action.split( '#' );
         var controller = controllerAction[ 0 ];
         action = controllerAction[ 1 ];
 
-        this.bindRoute( 'post', path, this.controllers[ controller + ( version ? ':' + version : '' ) ], action, as );
+        this.bindRoute( 'post', path, this.controllers[ controller + ( options.version ? ':' + options.version : '' ) ], action, options.as );
     },
 
-    put: function( path, action, version, as ) {
+    put: function( path, action, options ) {
+        options = options || {};
         var controllerAction = action.split( '#' );
         var controller = controllerAction[ 0 ];
         action = controllerAction[ 1 ];
 
-        this.bindRoute( 'put', path, this.controllers[ controller + ( version ? ':' + version : '' ) ], action, as );
+        this.bindRoute( 'put', path, this.controllers[ controller + ( options.version ? ':' + options.version : '' ) ], action, options.as );
     },
 
-    del: function( path, action, version, as ) {
+    del: function( path, action, options ) {
+        options = options || {};
         var controllerAction = action.split( '#' );
         var controller = controllerAction[ 0 ];
         action = controllerAction[ 1 ];
 
-        this.bindRoute( 'del', path, this.controllers[ controller + ( version ? ':' + version : '' ) ], action, as );
+        this.bindRoute( 'del', path, this.controllers[ controller + ( options.version ? ':' + options.version : '' ) ], action, options.as );
     },
 
-    delete: function( path, action, version, as ) {
+    delete: function( path, action, options ) {
+        options = options || {};
         var controllerAction = action.split( '#' );
         var controller = controllerAction[ 0 ];
         action = controllerAction[ 1 ];
 
-        this.bindRoute( 'delete', path, this.controllers[ controller + ( version ? ':' + version : '' ) ], action, as );
+        this.bindRoute( 'delete', path, this.controllers[ controller + ( options.version ? ':' + options.version : '' ) ], action, options.as );
     },
 
     /*
@@ -147,8 +157,8 @@ var Router = Class.extend({
                     var version = file;
                     var controllerList2 = fs.readdirSync( pathToControllersDir + '/' + version );
 
-                    for ( var j = 0, len = controllerList2.length; j < len; j++ ) {
-                        var file = controllerList2[ j ];
+                    for ( var j = 0, len2 = controllerList2.length; j < len2; j++ ) {
+                        file = controllerList2[ j ];
 
                         // if the file name doesn't start with '.' and ends with '.js'
                         // add the controller to our lookup table of all controllers
@@ -216,7 +226,7 @@ var Router = Class.extend({
         var arg;
 
         while( match = regex.exec( path ) ) {
-            newPath += path.substring( lastIndex, match.index )
+            newPath += path.substring( lastIndex, match.index );
             if ( arg = arguments[ count ] ) {
                 newPath += typeof arg !== 'object' ? arg : arg.toPath();
             } else {

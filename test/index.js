@@ -206,17 +206,11 @@ exports.nestedRoutesAndControllers = function( test ) {
 
 exports.pathHelpers = function( test ) {
     test.expect( 5 );
-    var restify = require( 'restify' );
-
-    var client = restify.createJsonClient({
-        url: 'http://localhost:8888',
-        version: '0.0.0'
-    });
 
     var Router = require( '../' );
     var router = new Router( this.server, __dirname + '/controllers', function( router ) {
         router.resources( 'bananas' );
-        router.get( '/bar/baz', 'bar#baz', undefined, 'welcome' );
+        router.get( '/bar/baz', 'bar#baz', { as: 'welcome' } );
     });
 
     test.ok( router.bananasPath() == '/bananas' );
@@ -225,6 +219,79 @@ exports.pathHelpers = function( test ) {
     test.ok( router.editBananaPath( 1 ) == '/bananas/1/edit' );
     test.ok( router.welcomePath() == '/bar/baz' );
     test.done();
+};
+
+exports.aliasResources = function( test ) {
+    test.expect( 14 );
+    var restify = require( 'restify' );
+
+    var client = restify.createStringClient({
+        url: 'http://localhost:8888',
+        version: '0.0.0'
+    });
+
+    var Router = require( '../' );
+    var router = new Router( this.server, __dirname + '/controllers', function( router ) {
+        router.resources( 'bananas', { path: 'b' } );
+    });
+
+    var count = 0;
+
+    client.get( '/b', function( err, req, res, data ) {
+        test.ok( !err, 'No server error for bananas#index' );
+        test.ok( data == 'bananas', 'bananas#index' );
+        if ( ++count == 7 ) {
+            test.done();
+        }
+    });
+
+    client.get( '/b/1', function( err, req, res, data ) {
+        test.ok( !err, 'No server error for bananas#show' );
+        test.ok( data == 'banana', 'bananas#show' );
+        if ( ++count == 7 ) {
+            test.done();
+        }
+    });
+
+    client.get( '/b/new', function( err, req, res, data ) {
+        test.ok( !err, 'No server error for bananas#new' );
+        test.ok( data == 'new banana', 'bananas#new' );
+        if ( ++count == 7 ) {
+            test.done();
+        }
+    });
+
+    client.get( '/b/1/edit', function( err, req, res, data ) {
+        test.ok( !err, 'No server error for bananas#edit' );
+        test.ok( data == 'edit banana', 'bananas#edit' );
+        if ( ++count == 7 ) {
+            test.done();
+        }
+    });
+
+    client.post( '/b', function( err, req, res, data ) {
+        test.ok( !err, 'No server error for bananas#create' );
+        test.ok( data == 'create banana', 'bananas#create' );
+        if ( ++count == 7 ) {
+            test.done();
+        }
+    });
+
+    client.put( '/b/1', function( err, req, res, data ) {
+        test.ok( !err, 'No server error for bananas#update' );
+        test.ok( data == 'update banana', 'bananas#update' );
+        if ( ++count == 7 ) {
+            test.done();
+        }
+    });
+
+    client.del( '/b/1', function( err, req, res, data ) {
+        test.ok( !err, 'No server error for bananas#destroy' );
+        test.ok( data == 'destroy banana', 'bananas#destroy' );
+        if ( ++count == 7 ) {
+            test.done();
+        }
+    });
 };
 
 exports.setUp = function( callback ) {
