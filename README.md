@@ -26,6 +26,7 @@ var server = server.createServer();
 var routes = function( router ) {
     router.resources( 'foo' );
     router.get( '/bar/baz', 'bar#baz' );
+    router.resources( 'bananas', { path: 'b' } );
 }
 
 // Sets up routes on the actual server using the routes object
@@ -62,6 +63,45 @@ var FooController = {
     }
 };
 ```
+
+
+## Path helpers
+
+The router instance will have path helpers to help compute paths based on
+semantic names. This helps to avoid having to hard-code in URLs/paths in your
+code (Note: The best way to make these available to all controllers is by making the
+router instance a global).
+
+Here's an example:
+
+```javascript
+// server.js
+var Router = require( 'paper-router' );
+var router = new Router(
+    server,
+    path.join( __dirname, 'controllers' ),
+    function( router ) {
+        router.resources( 'automobiles', { as: 'cars' } );
+    }
+);
+global.router = router;
+```
+
+```javascript
+// controllers/autmobiles.js
+var AutomobilesController = {
+    new: function( req, res, next ) {
+        var car = Cars.create( { color: 'red' } );
+        res.redirect( router.editCarPath( car ) );
+    }
+}
+```
+
+Here, the global variable router provides methods to build paths based on
+primitive types (strings, integers, etc) or based on a JavaScript object
+(provided it has a method called `toPath` ). `router.editCarPath( car )` will
+map to `/automobiles/:id/edit` where id is the id of the newly created car
+model.
 
 
 ## Versioning
