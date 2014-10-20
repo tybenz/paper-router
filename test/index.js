@@ -1,5 +1,5 @@
 exports.regularRoutesAndControllers = function( test ) {
-    test.expect( 12 );
+    test.expect( 14 );
     var restify = require( 'restify' );
 
     var client = restify.createJsonClient({
@@ -11,14 +11,23 @@ exports.regularRoutesAndControllers = function( test ) {
     var router = new Router( this.server, __dirname + '/controllers', function( router ) {
         router.resources( 'foo' );
         router.get( '/bar/baz', 'bar#baz' );
+        router.get( '/class', 'class#route' );
     });
 
     var count = 0;
 
+    client.get( '/class', function( err, req, res, obj ) {
+        test.ok( !err, 'No server error for class#route' );
+        test.ok( obj.foo == 'bar', 'class#route' );
+        if ( ++count == 7 ) {
+            test.done();
+        }
+    });
+
     client.get( '/foo', function( err, req, res, obj ) {
         test.ok( !err, 'No server error for foo#index' );
         test.ok( obj[ 0 ].foo == 'bar' && obj[ 1 ].foo2 == 'bar2', 'foo#index' );
-        if ( ++count == 6 ) {
+        if ( ++count == 7 ) {
             test.done();
         }
     });
@@ -26,7 +35,7 @@ exports.regularRoutesAndControllers = function( test ) {
     client.get( '/foo/1', function( err, req, res, obj ) {
         test.ok( !err, 'No server error for foo#show' );
         test.ok( obj.foo == 'bar', 'foo#show' );
-        if ( ++count == 6 ) {
+        if ( ++count == 7 ) {
             test.done();
         }
     });
@@ -34,7 +43,7 @@ exports.regularRoutesAndControllers = function( test ) {
     client.post( '/foo', function( err, req, res, obj ) {
         test.ok( !err, 'No server error for foo#create' );
         test.ok( obj.foo == 'bar', 'foo#create' );
-        if ( ++count == 6 ) {
+        if ( ++count == 7 ) {
             test.done();
         }
     });
@@ -42,7 +51,7 @@ exports.regularRoutesAndControllers = function( test ) {
     client.put( '/foo/1', function( err, req, res, obj ) {
         test.ok( !err, 'No server error for foo#update' );
         test.ok( obj.foo == 'bar', 'foo#update' );
-        if ( ++count == 6 ) {
+        if ( ++count == 7 ) {
             test.done();
         }
     });
@@ -50,7 +59,7 @@ exports.regularRoutesAndControllers = function( test ) {
     client.del( '/foo/1', function( err, req, res, obj ) {
         test.ok( !err, 'No server error for foo#destroy' );
         test.ok( obj.foo == 'bar', 'foo#destroy' );
-        if ( ++count == 6 ) {
+        if ( ++count == 7 ) {
             test.done();
         }
     });
@@ -58,7 +67,7 @@ exports.regularRoutesAndControllers = function( test ) {
     client.get( '/bar/baz', function( err, req, res, obj ) {
         test.ok( !err, 'No server error for bar#baz' );
         test.ok( obj.bar == 'baz', 'bar#baz' );
-        if ( ++count == 6 ) {
+        if ( ++count == 7 ) {
             test.done();
         }
     });

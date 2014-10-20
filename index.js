@@ -166,7 +166,8 @@ var Router = Class.extend({
                             // In the versioned case we save the controller to
                             // a property named controller:version
                             // e.g. 'users:v0'
-                            controllers[ file.replace( /\.js$/, '' ) + ':' + version ] = require( pathToControllersDir + '/' + version + '/' + file );
+                            var controller = require( pathToControllersDir + '/' + version + '/' + file );
+                            controllers[ file.replace( /\.js$/, '' ) + ':' + version ] = typeof controller == 'function' ? new controller() : controller;
                         }
                     }
 
@@ -175,7 +176,8 @@ var Router = Class.extend({
                 // if the file name doesn't start with '.' and ends with '.js'
                 // add the controller to our lookup table of all controllers
                 if ( file.charAt(0) != '.' && file.match( /\.js$/ ) ) {
-                    controllers[ file.replace( /\.js$/, '' ) ] = require( pathToControllersDir + '/' + file );
+                    var controller = require( pathToControllersDir + '/' + file );
+                    controllers[ file.replace( /\.js$/, '' ) ] = typeof controller == 'function' ? new controller() : controller;
                 }
             }
         }
