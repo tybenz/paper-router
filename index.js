@@ -83,9 +83,9 @@ var Router = Class.extend({
         this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + ( path || resource ) + '/new', controller, 'new', 'new' + cap( singular) );
         this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + ( path || resource ) + '/:id', controller, 'show', singular );
         this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + ( path || resource ) + '/:id/edit', controller, 'edit', 'edit' + cap( singular ) );
-        this.bindRoute( 'post', ( prefixRoute || "" ) + '/' + ( path || resource ), controller, 'create' );
-        this.bindRoute( 'put', ( prefixRoute || "" ) + '/' + ( path || resource ) + '/:id', controller, 'update' );
-        this.bindRoute( 'del', ( prefixRoute || "" ) + '/' + ( path || resource ) + '/:id', controller, 'destroy' );
+        this.bindRoute( 'post', ( prefixRoute || "" ) + '/' + ( path || resource ), controller, 'create', as || resource );
+        this.bindRoute( 'put', ( prefixRoute || "" ) + '/' + ( path || resource ) + '/:id', controller, 'update', singular );
+        this.bindRoute( 'del', ( prefixRoute || "" ) + '/' + ( path || resource ) + '/:id', controller, 'destroy', singular );
         if ( this.server.delete ) {
             this.bindRoute( 'delete', ( prefixRoute || "" ) + '/' + ( path || resource ) + '/:id', controller, 'destroy' );
         }
