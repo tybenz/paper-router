@@ -239,7 +239,7 @@ var Router = Class.extend({
         }
         newPath += path.substring( lastIndex );
 
-        return newPath;
+        return newPath.replace( /([^\/])$/, '$1/' );
     },
 
     /*
