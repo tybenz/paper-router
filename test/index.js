@@ -1,5 +1,7 @@
+var util = require( 'util' );
+
 exports.regularRoutesAndControllers = function( test ) {
-    test.expect( 14 );
+    test.expect( 19 );
     var restify = require( 'restify' );
 
     var client = restify.createJsonClient({
@@ -26,7 +28,8 @@ exports.regularRoutesAndControllers = function( test ) {
 
     client.get( '/foo', function( err, req, res, obj ) {
         test.ok( !err, 'No server error for foo#index' );
-        test.ok( obj[ 0 ].foo == 'bar' && obj[ 1 ].foo2 == 'bar2', 'foo#index' );
+        test.ok( obj.objects[ 0 ].foo == 'bar' && obj.objects[ 1 ].foo2 == 'bar2', 'foo#index' );
+        test.ok( obj.requestId == 123, 'foo#index' );
         if ( ++count == 7 ) {
             test.done();
         }
@@ -35,6 +38,7 @@ exports.regularRoutesAndControllers = function( test ) {
     client.get( '/foo/1', function( err, req, res, obj ) {
         test.ok( !err, 'No server error for foo#show' );
         test.ok( obj.foo == 'bar', 'foo#show' );
+        test.ok( obj.requestId == 123, 'foo#show' );
         if ( ++count == 7 ) {
             test.done();
         }
@@ -43,6 +47,7 @@ exports.regularRoutesAndControllers = function( test ) {
     client.post( '/foo', function( err, req, res, obj ) {
         test.ok( !err, 'No server error for foo#create' );
         test.ok( obj.foo == 'bar', 'foo#create' );
+        test.ok( obj.requestId == 123, 'foo#create' );
         if ( ++count == 7 ) {
             test.done();
         }
@@ -51,6 +56,7 @@ exports.regularRoutesAndControllers = function( test ) {
     client.put( '/foo/1', function( err, req, res, obj ) {
         test.ok( !err, 'No server error for foo#update' );
         test.ok( obj.foo == 'bar', 'foo#update' );
+        test.ok( obj.requestId == 123, 'foo#update' );
         if ( ++count == 7 ) {
             test.done();
         }
@@ -59,6 +65,7 @@ exports.regularRoutesAndControllers = function( test ) {
     client.del( '/foo/1', function( err, req, res, obj ) {
         test.ok( !err, 'No server error for foo#destroy' );
         test.ok( obj.foo == 'bar', 'foo#destroy' );
+        test.ok( obj.requestId == 123, 'foo#destroy' );
         if ( ++count == 7 ) {
             test.done();
         }
@@ -222,11 +229,11 @@ exports.pathHelpers = function( test ) {
         router.get( '/bar/baz', 'bar#baz', { as: 'welcome' } );
     });
 
-    test.ok( router.bananasPath() == '/bananas' );
-    test.ok( router.bananaPath( 1 ) == '/bananas/1' );
-    test.ok( router.newBananaPath() == '/bananas/new' );
-    test.ok( router.editBananaPath( 1 ) == '/bananas/1/edit' );
-    test.ok( router.welcomePath() == '/bar/baz' );
+    test.ok( router.bananasPath() == '/bananas/' );
+    test.ok( router.bananaPath( 1 ) == '/bananas/1/' );
+    test.ok( router.newBananaPath() == '/bananas/new/' );
+    test.ok( router.editBananaPath( 1 ) == '/bananas/1/edit/' );
+    test.ok( router.welcomePath() == '/bar/baz/' );
     test.done();
 };
 

@@ -1,4 +1,5 @@
 var fs = require( 'fs' );
+var util = require( 'util' );
 var Class = require( 'class.extend' );
 var inflect = require( 'i' )();
 
@@ -42,24 +43,12 @@ var Router = Class.extend({
         var self = this;
 
         this.routes({
-            resources: function( resource, options ) {
-                self.resources( resource, options );
-            },
-            get: function( path, action, options ) {
-                self.get( path, action, options );
-            },
-            post: function( path, action, options ) {
-                self.post( path, action, options );
-            },
-            put: function( path, action, options ) {
-                self.put( path, action, options );
-            },
-            del: function( path, action, options ) {
-                self.del( path, action, options );
-            },
-            delete: function( path, action, options ) {
-                self.delete( path, action, options );
-            }
+            resources: this.resources.bind( this ),
+            get: this.get.bind( this ),
+            post: this.post.bind( this ),
+            put: this.put.bind( this ),
+            del: this.del.bind( this ),
+            delete: this.delete.bind( this )
         });
     },
 
@@ -257,10 +246,40 @@ var Router = Class.extend({
             if ( controller.pre ) {
                 args.push( controller.pre.bind( controller ) );
             }
+            if ( controller.before ) {
+                var err = new Error( 'The before property must be an array of method names' );
+                if ( !util.isArray( controller.before ) ) {
+                    throw err;
+                }
+
+                for ( var i = 0, len = controller.before.length; i < len; i++ ) {
+                    var methodName = controller.before[ i ];
+                    if ( typeof controller[ methodName ] != 'function' ) {
+                        throw err;
+                    }
+                    args.push( controller[ methodName ].bind( controller ) );
+                }
+            }
             if ( authArg = controller.auth ? controller.auth( action ) : null ) {
                 args.push( authArg );
             }
             args.push( this.buildCallback( controller[ action ] ).bind( controller ) );
+
+            if ( controller.after ) {
+                var err = new Error( 'The after property must be an array of method names' );
+                if ( !util.isArray( controller.after ) ) {
+                    throw err;
+                }
+
+                for ( var i = 0, len = controller.after.length; i < len; i++ ) {
+                    var methodName = controller.after[ i ];
+                    if ( typeof controller[ methodName ] != 'function' ) {
+                        throw err;
+                    }
+                    args.push( controller[ methodName ].bind( controller ) );
+                }
+            }
+
             this.server[ method ].apply( this.server, args );
 
             if ( as ) {
