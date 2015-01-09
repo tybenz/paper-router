@@ -1,5 +1,7 @@
 var FooController = {
-    before: [ 'beforeMethod' ],
+    before: [
+        { name: 'beforeMethod', except: [ 'index' ] }
+    ],
 
     beforeMethod: function( req, res, next ) {
         req.id = 123;
@@ -7,8 +9,10 @@ var FooController = {
     },
 
     index: function( req, res, next ) {
-        res.send( {
+        res.send({
             requestId: req.id,
+            controller: req.controller,
+            action: req.action,
             objects: [ { foo: 'bar' }, { foo2: 'bar2' } ]
         });
     },

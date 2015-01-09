@@ -68,15 +68,15 @@ var Router = Class.extend({
             return str.charAt( 0 ).toUpperCase() + str.slice( 1 );
         };
 
-        this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + ( path || resource ), controller, 'index', as || resource );
-        this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + ( path || resource ) + '/new', controller, 'new', 'new' + cap( singular) );
-        this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + ( path || resource ) + '/:id', controller, 'show', singular );
-        this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + ( path || resource ) + '/:id/edit', controller, 'edit', 'edit' + cap( singular ) );
-        this.bindRoute( 'post', ( prefixRoute || "" ) + '/' + ( path || resource ), controller, 'create', as || resource );
-        this.bindRoute( 'put', ( prefixRoute || "" ) + '/' + ( path || resource ) + '/:id', controller, 'update', singular );
-        this.bindRoute( 'del', ( prefixRoute || "" ) + '/' + ( path || resource ) + '/:id', controller, 'destroy', singular );
+        this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + ( path || resource ), controller, resource, 'index', as || resource );
+        this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + ( path || resource ) + '/new', controller, resource, 'new', 'new' + cap( singular) );
+        this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + ( path || resource ) + '/:id', controller, resource, 'show', singular );
+        this.bindRoute( 'get', ( prefixRoute || "" ) + '/' + ( path || resource ) + '/:id/edit', controller, resource, 'edit', 'edit' + cap( singular ) );
+        this.bindRoute( 'post', ( prefixRoute || "" ) + '/' + ( path || resource ), controller, resource, 'create', as || resource );
+        this.bindRoute( 'put', ( prefixRoute || "" ) + '/' + ( path || resource ) + '/:id', controller, resource, 'update', singular );
+        this.bindRoute( 'del', ( prefixRoute || "" ) + '/' + ( path || resource ) + '/:id', controller, resource, 'destroy', singular );
         if ( this.server.delete ) {
-            this.bindRoute( 'delete', ( prefixRoute || "" ) + '/' + ( path || resource ) + '/:id', controller, 'destroy' );
+            this.bindRoute( 'delete', ( prefixRoute || "" ) + '/' + ( path || resource ) + '/:id', controller, resource, 'destroy' );
         }
     },
 
@@ -89,7 +89,7 @@ var Router = Class.extend({
         var controller = controllerAction[ 0 ];
         action = controllerAction[ 1 ];
 
-        this.bindRoute( 'get', path, this.controllers[ controller + ( options.version ? ':' + options.version : '' ) ], action, options.as );
+        this.bindRoute( 'get', path, this.controllers[ controller + ( options.version ? ':' + options.version : '' ) ], controller, action, options.as );
     },
 
     post: function( path, action, options ) {
@@ -98,7 +98,7 @@ var Router = Class.extend({
         var controller = controllerAction[ 0 ];
         action = controllerAction[ 1 ];
 
-        this.bindRoute( 'post', path, this.controllers[ controller + ( options.version ? ':' + options.version : '' ) ], action, options.as );
+        this.bindRoute( 'post', path, this.controllers[ controller + ( options.version ? ':' + options.version : '' ) ], controller, action, options.as );
     },
 
     put: function( path, action, options ) {
@@ -107,7 +107,7 @@ var Router = Class.extend({
         var controller = controllerAction[ 0 ];
         action = controllerAction[ 1 ];
 
-        this.bindRoute( 'put', path, this.controllers[ controller + ( options.version ? ':' + options.version : '' ) ], action, options.as );
+        this.bindRoute( 'put', path, this.controllers[ controller + ( options.version ? ':' + options.version : '' ) ], controller, action, options.as );
     },
 
     del: function( path, action, options ) {
@@ -116,7 +116,7 @@ var Router = Class.extend({
         var controller = controllerAction[ 0 ];
         action = controllerAction[ 1 ];
 
-        this.bindRoute( 'del', path, this.controllers[ controller + ( options.version ? ':' + options.version : '' ) ], action, options.as );
+        this.bindRoute( 'del', path, this.controllers[ controller + ( options.version ? ':' + options.version : '' ) ], controller, action, options.as );
     },
 
     delete: function( path, action, options ) {
@@ -125,7 +125,7 @@ var Router = Class.extend({
         var controller = controllerAction[ 0 ];
         action = controllerAction[ 1 ];
 
-        this.bindRoute( 'delete', path, this.controllers[ controller + ( options.version ? ':' + options.version : '' ) ], action, options.as );
+        this.bindRoute( 'delete', path, this.controllers[ controller + ( options.version ? ':' + options.version : '' ) ], controller, action, options.as );
     },
 
     /*
@@ -237,46 +237,76 @@ var Router = Class.extend({
      * bindRoute will make sure to bind the right route, necessary auth, and the callback
      * to whatever http method is specified
     */
-    bindRoute: function( method, path, controller, action, as ) {
+    bindRoute: function( method, path, controller, controllerName, action, as ) {
         if ( controller && controller[ action ] ) {
             var args = [],
                 authArg;
 
             args.push( path );
+
             if ( controller.pre ) {
                 args.push( controller.pre.bind( controller ) );
             }
+
             if ( controller.before ) {
-                var err = new Error( 'The before property must be an array of method names' );
+                var err = new Error( 'The before property must be an array of objects' );
                 if ( !util.isArray( controller.before ) ) {
                     throw err;
                 }
 
                 for ( var i = 0, len = controller.before.length; i < len; i++ ) {
-                    var methodName = controller.before[ i ];
-                    if ( typeof controller[ methodName ] != 'function' ) {
-                        throw err;
+                    var options = controller.before[ i ];
+                    if ( options.except && options.except.indexOf( action ) == -1 ) {
+                        if ( typeof controller[ options.name ] == 'function' ) {
+                            args.push( controller[ options.name ].bind( controller ) );
+                        } else {
+                            throw new Error( 'Must be a function' );
+                        }
                     }
-                    args.push( controller[ methodName ].bind( controller ) );
+                    if ( options.only && options.only.indexOf( action ) != -1 ) {
+                        if ( typeof controller[ options.name ] == 'function' ) {
+                            args.push( controller[ options.name ].bind( controller ) );
+                        } else {
+                            throw new Error( 'Must be a function' );
+                        }
+                    }
                 }
             }
+
             if ( authArg = controller.auth ? controller.auth( action ) : null ) {
                 args.push( authArg );
             }
+
+            args.push( function( req, res, next ) {
+                req.controller = controllerName;
+                req.action = action;
+                next();
+            });
+
             args.push( this.buildCallback( controller[ action ] ).bind( controller ) );
 
             if ( controller.after ) {
-                var err = new Error( 'The after property must be an array of method names' );
+                var err = new Error( 'The after property must be an array of objects' );
                 if ( !util.isArray( controller.after ) ) {
                     throw err;
                 }
 
                 for ( var i = 0, len = controller.after.length; i < len; i++ ) {
-                    var methodName = controller.after[ i ];
-                    if ( typeof controller[ methodName ] != 'function' ) {
-                        throw err;
+                    var options = controller.after[ i ];
+                    if ( options.except && options.except.indexOf( action ) == -1 ) {
+                        if ( typeof controller[ options.name ] == 'function' ) {
+                            args.push( controller[ options.name ].bind( controller ) );
+                        } else {
+                            throw new Error( 'Must be a function' );
+                        }
                     }
-                    args.push( controller[ methodName ].bind( controller ) );
+                    if ( options.only && options.only.indexOf( action ) != -1 ) {
+                        if ( typeof controller[ options.name ] == 'function' ) {
+                            args.push( controller[ options.name ].bind( controller ) );
+                        } else {
+                            throw new Error( 'Must be a function' );
+                        }
+                    }
                 }
             }
 
