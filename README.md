@@ -19,6 +19,7 @@ npm install paper-router
 ```javascript
 var Router = require( 'paper-router' );
 var express = require( 'express' );
+var routes = require( './routes' );
 var path = require( 'path' );
 
 var app = express();
@@ -77,7 +78,7 @@ flexibility if one or both need to change during the course of development.
 ## Resourceful routing
 
 There are 7 classic routes associated with resourceful routing in Rails. I
-stole the concept and applied to to paper router (Disclaimer: almost all of
+stole the concept and applied it to paper router (Disclaimer: almost all of
 these concepts were ripped off from Rails).
 
 So this:
