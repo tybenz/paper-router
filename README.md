@@ -1,12 +1,12 @@
 # paper-router
 
-# Installation
+## Installation
 
 ```shell
 npm install paper-router
 ```
 
-# Initializing the router
+## Initializing the router
 
 ```javascript
 var Router = require( 'paper-router' );
@@ -20,7 +20,7 @@ var app = express();
 var router = new Router( app, __dirname + '/controllers', routes );
 ```
 
-# Why do I need this?
+## Why do I need this?
 
 Paper Router is a routing mechanism that helps keep server-side
 connect/restify/express apps organized.
@@ -65,7 +65,7 @@ Notice how the controllers and actions don't need to know anything about the
 actual url/path. Separating actions from their routes provides much more
 flexibility if one or both need to change during the course of development.
 
-# Resourceful routing
+## Resourceful routing
 
 There are 7 classic routes associated with resourceful routing in Rails. I
 stole the concept and applied to to paper router (Disclaimer: almost all of
@@ -93,7 +93,7 @@ module.exports = function( router ) {
 };
 ```
 
-# Path helpers
+## Path helpers
 
 The router instance will have path helpers to help compute paths based on
 semantic names. This helps to avoid having to hard-code in URLs/paths in your
@@ -132,7 +132,7 @@ map to `/automobiles/:id/edit` where id is the id of the newly created car
 model.
 
 
-# Before/After filters
+## Before/After filters
 
 Sometimes multiple actions within a controller can benefit from sharing some
 logic. The best way to do this is with before filters.
@@ -144,6 +144,8 @@ In this example, the method `getBanana` is run only before the `create`,
 **except** `create`, `update`, and `destroy`.
 
 ```javascript
+var BananasModel = require( './bananas_model' );
+
 var BananasController = module.exports = {
     before: [
         { name: 'getBanana', only: [ 'show', 'update', 'destroy' ] }
@@ -188,7 +190,7 @@ var BananasController = module.exports = {
 };
 ```
 
-# Versioning
+## Versioning
 
 If you're building an API with Express or Restify that needs to support
 versioning, paper-router can help set up your codebase.
