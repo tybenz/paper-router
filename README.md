@@ -1,5 +1,13 @@
 # paper-router
 
+- [Installation](#installation)
+- [Initializing the router](#initializing-the-router)
+- [Why do I need this?](#why-do-i-need-this)
+- [Resourceful routing](#resourceful-routing)
+- [Path helpers](#path-helpers)
+- [Before/After filters](#beforeafter-filters)
+- [Versioning](#versioning)
+
 ## Installation
 
 ```shell
@@ -166,6 +174,7 @@ var BananasController = module.exports = {
 
     cleanup: function( req, res, next ) {
         req.cleanup();
+        next();
     },
 
     create: function( req, res, next ) {
