@@ -1,71 +1,99 @@
 # paper-router
 
-Before:
-
-https://gist.github.com/tybenz/d056013f70f039b61c4b
-
-After:
-
-https://gist.github.com/tybenz/f3ec2b8e0fabd1f78335
-
 # Installation
 
 ```shell
 npm install paper-router
 ```
 
-# Usage
+# Initializing the router
 
 ```javascript
-var Router = require( 'paper-router' ); // returns a class that we can call new on
-var restify = require( 'restify' ); // could also be express
+var Router = require( 'paper-router' );
+var express = require( 'express' );
 
-var server = server.createServer();
+var app = express();
 
-// See notes below on what the routes object should look like
-var routes = function( router ) {
-    router.resources( 'foo' );
-    router.get( '/bar/baz', 'bar#baz' );
-    router.resources( 'bananas', { path: 'b' } );
-}
-
-// Sets up routes on the actual server using the routes object
-var router = new Router( server, __dirname + '/controllers', routes );
+// Sets up routes on the actual app using the routes object
+// Paper router just needs the app your attaching routes to, the location of
+// your controller files, and the routes callback that was created in routes.js
+var router = new Router( app, __dirname + '/controllers', routes );
 ```
 
-## How it works
+# Why do I need this?
 
-A router takes in a server and a path to a directory full of controller files
-and a routes function that can use the appropriate methods to declare routes
-e.g.:
+Paper Router is a routing mechanism that helps keep server-side
+connect/restify/express apps organized.
 
-```javascript
-new Router(
-    server,
-    __dirname + '/controllers',
-    function( router ) {
-        router.resources( 'foo' );
-        router.get( '/foo/bar', 'controller#action' );
-    }
-);
-```
+It helps to cleanly separate the actual routes from the actions that respond to
+them. This gives you the ability to map multiple routes to the same action,
+use path helpers to avoid using string literal paths in your codebase, and
+apply things like before & after filters to multiple actions within a
+controller.
 
-Route declarations can either specify a "resource" - controller that
-maps to CRUD methods, or it can have an explicit mapping between an
-arbitrary route and a controller#action combo
-
-Each controller should be an object with its actions as properties:
+Here's an example controller:
 
 ```javascript
-var FooController = {
+var BananasModel = require( './bananas_model' );
+
+var BananasController = module.exports = {
     index: function( req, res, next ) {
-        res.send( 'foo' );
+        res.send( BananasModel.getAll() );
+    },
+
+    show: function( req, res, next ) {
+        res.send( BananasModel.findById( req.params.id ) );
     }
 };
 ```
 
+Here's what the route declaration for both of those actions would look:
 
-## Path helpers
+```javascript
+// routes.js
+module.exports = function( router ) {
+    router.get( '/bananas', 'bananas#index' );
+    router.get( '/bananas/:id', bananas#show' );
+}
+```
+
+Route declarations go in their own file called routes.js. Use the above syntax
+to map routes to specific actions. A controller is just a way to group actions
+with common interests.
+
+Notice how the controllers and actions don't need to know anything about the
+actual url/path. Separating actions from their routes provides much more
+flexibility if one or both need to change during the course of development.
+
+# Resourceful routing
+
+There are 7 classic routes associated with resourceful routing in Rails. I
+stole the concept and applied to to paper router (Disclaimer: almost all of
+these concepts were ripped off from Rails).
+
+So this:
+
+```javascript
+module.exports = function( router ) {
+    router.resources( 'bananas' );
+};
+```
+
+Is equivalent to this:
+
+```javascript
+module.exports = function( router ) {
+    router.post( '/bananas', 'bananas#create' );
+    router.get( '/bananas/:id', 'bananas#show' );
+    router.put( '/bananas/:id', 'bananas#update' );
+    router.delete( '/bananas/:id', 'bananas#destroy' );
+    router.get( '/bananas', 'bananas#index' );
+    router.get( '/bananas/new', 'bananas#new' );
+    router.get( '/bananas/:id/edit', 'bananas#edit' );
+};
+```
+
+# Path helpers
 
 The router instance will have path helpers to help compute paths based on
 semantic names. This helps to avoid having to hard-code in URLs/paths in your
@@ -104,7 +132,63 @@ map to `/automobiles/:id/edit` where id is the id of the newly created car
 model.
 
 
-## Versioning
+# Before/After filters
+
+Sometimes multiple actions within a controller can benefit from sharing some
+logic. The best way to do this is with before filters.
+
+You can declare a list of actions that the before/after filter should apply to.
+
+In this example, the method `getBanana` is run only before the `create`,
+`update`, and `destroy` actions. The method `cleanup` is run after all actions
+**except** `create`, `update`, and `destroy`.
+
+```javascript
+var BananasController = module.exports = {
+    before: [
+        { name: 'getBanana', only: [ 'show', 'update', 'destroy' ] }
+    ],
+
+    after: [
+        { name: 'cleanup', except: [ 'show', 'update', 'destroy' ] }
+    ],
+
+    getBanana: function( req, res, next ) {
+        req.banana = BananasModel.findById( req.params.id );
+        if ( !req.banana ) {
+            return next( new Error( 'Banana #' + req.params.id + ' not found' ) );
+        }
+        next();
+    },
+
+    cleanup: function( req, res, next ) {
+        req.cleanup();
+    },
+
+    create: function( req, res, next ) {
+        res.send( BananasModel.create( req.body ) );
+    },
+
+    show: function( req, res, next ) {
+        res.send( req.banana );
+    },
+
+    update: function( req, res, next ) {
+        res.send( req.banana.update( req.body ) );
+    },
+
+    destroy: function( req, res, next ) {
+        req.banana.destroy();
+        res.send( { success: true } );
+    },
+
+    index: function( req, res, next ) {
+        res.send( BananasModel.getAll() );
+    }
+};
+```
+
+# Versioning
 
 If you're building an API with Express or Restify that needs to support
 versioning, paper-router can help set up your codebase.
@@ -112,7 +196,7 @@ versioning, paper-router can help set up your codebase.
 Instead of providing paper-router a path to a directory of controllers, give it
 a path to a directory of version folders, each who have their own versions of
 the controllers. The version folders must begin with a 'v' and be followed by
-an integer (sorry semver freaks).
+an integer.
 
 Example directory structure:
 
@@ -164,7 +248,7 @@ Here's an example of a v1 `BananasController` which falls back to using the v0
 `BananasController` actions if new ones are not defined:
 
 ```javascript
-var _ = require( 'lodash-node' );
+var _ = require( 'lodash' );
 var v0 = require( '../v0/bananas.js' );
 
 var BananasController = _.extend( {}, v0, {
@@ -188,65 +272,3 @@ version folder. Paper router will not go an find an older controller. The
 mirror has to be set up manually for each version.
 
 
-## buildCallback
-
-This method is meant to be over-written.
-It should return a function to be bound to the server's route mechanism
-Example: In express routes are done like this:
-
-```javascript
-server.get( '/foo/bar', function( req, res ) {
-    res.send( 'foobar' );
-});
-```
-
-So in your controller you can simply take the `function( req, res ) {...}`
-part and set it as a property on the controller
-
-Or if you'd like to have your controllers know less about the server and
-how to respond, you can have controllers whose actions simply return a value and
-wrap them with a more complicated callback see example below:
-
-```javascript
-var CustomRouter = Router.extend({
-    buidCallback: function ( fn ) {
-        return function( req, res, next ) {
-            var result = fn();
-            res.send( result );
-        };
-    }
-});
-```
-
-## Authentication middleware
-If you'd like to use some authentication middleware like
-[passport](https://github.com/jaredhanson/passport), you can put an `auth`
-property on your controllers that need authentication.  The `bindRoute` method
-will make sure to bind the right route, necessary auth, and the callback to
-whatever express/restify method is specified.
-
-Typical route binding in express/restify looks like this:
-
-```javascript
-server.get( '/foo', function( req, res, next ) {
-    res.send( 'foo' );
-});
-```
-
-With passport it might look like this:
-
-```javascript
-var authCallback = function() {
-    return passport.authenticate( 'basic', { session: false } );
-}
-
-server.get( '/foo', authCallback, function( req, res, next ) {
-    passport.authenticate( 'basic', { session: false } );
-    res.send( 'foo' );
-});
-```
-
-If there is an auth property set on your controller it will be passed as the
-second argument to the routing method. If there isn't one, no auth callback
-will be passed and the second argument will be your route callback - business
-as usual.
