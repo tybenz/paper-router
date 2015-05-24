@@ -58,8 +58,8 @@ var Router = Class.extend({
     */
     resources: function( resource, options ) {
         options = options || {};
-        var controller = this.controllers[ resource + ( version ? ':' + version : '' ) ];
         var version = options.version;
+        var controller = this.controllers[ resource + ( version ? ':' + version : '' ) ];
         var prefixRoute = options.prefixRoute;
         var path = options.path;
         var as = options.as;

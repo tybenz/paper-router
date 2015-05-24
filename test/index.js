@@ -222,6 +222,40 @@ exports.nestedRoutesAndControllers = function( test ) {
     });
 };
 
+exports.versionedRoutesAndControllers = function( test ) {
+    test.expect( 4 );
+
+    var restify = require( 'restify' );
+    var client = restify.createJsonClient({
+        url: 'http://localhost:8888',
+        version: '0.0.0'
+    });
+
+    var Router = require( '../' );
+    var router = new Router( this.server, __dirname + '/controllers/versioned', function( router ) {
+        router.resources( 'bananas', { prefixRoute: '/v0', version: 'v0' } );
+        router.get( '/v0/bananas/:id/extra', 'bananas#extra', { version: 'v0' } );
+    }, true );
+
+    var count = 0;
+
+    client.get( '/v0/bananas', function( err, req, res, obj ) {
+        test.ok( !err, 'No server error for bananas#index' );
+        test.ok( obj.length == 2 );
+        if ( ++count == 2 ) {
+            test.done();
+        }
+    });
+
+    client.get( '/v0/bananas/1/extra', function( err, req, res, obj ) {
+        test.ok( !err, 'No server error for bananas#extra' );
+        test.ok( obj.foo == 'bar' );
+        if ( ++count == 2 ) {
+            test.done();
+        }
+    });
+};
+
 exports.pathHelpers = function( test ) {
     test.expect( 5 );
 

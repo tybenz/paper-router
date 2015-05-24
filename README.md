@@ -233,13 +233,16 @@ var server = require( 'server' );
 var PaperRouter = require( 'paper-router' );
 
 var routes = function( router ) {
-  router.resources( 'users', '/v0', 'v0' );
-  router.resources( 'bananas', '/v0', 'v0' );
-  router.resources( 'peels', '/v0', 'v0' );
+  router.resources( 'users', { prefixRoute: '/v0', version: 'v0' } );
+  router.resources( 'bananas', { prefixRoute: '/v0', version: 'v0' } );
+  router.resources( 'peels', { prefixRoute: '/v0', version: 'v0' } );
 
-  router.resources( 'users', '/v1', 'v1' );
-  router.resources( 'bananas', '/v1', 'v1' );
-  router.resources( 'peels', '/v1', 'v1' );
+  router.resources( 'users', { prefixRoute: '/v1', version: 'v1' } );
+  router.resources( 'bananas', { prefixRoute: '/v1', version: 'v1' } );
+  router.resources( 'peels', { prefixRoute: '/v1', version: 'v1' } );
+
+  router.get( '/v0/bananas/:id/extra', 'bananas#extra', { version: 'v0' } );
+  router.get( '/v1/bananas/:id/extra', 'bananas#extra', { version: 'v1' } );
 };
 
 var router = new PaperRouter(
