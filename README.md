@@ -7,6 +7,7 @@
 - [Path helpers](#path-helpers)
 - [Before/After filters](#beforeafter-filters)
 - [Versioning](#versioning)
+- [Passport Authentication](#passport-authentication)
 
 ## Installation
 
