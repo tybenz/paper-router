@@ -1,6 +1,6 @@
 var FooController = {
     before: [
-        { name: 'beforeMethod', except: [ 'index' ] }
+        { name: 'beforeMethod' }
     ],
 
     beforeMethod: function( req, res, next ) {

@@ -288,3 +288,112 @@ version folder. Paper router will not go an find an older controller. The
 mirror has to be set up manually for each version.
 
 
+## Passport Authentication
+
+The main thing to keep in mind with paper router, is that each route handler
+follows the typical middleware flow. If you want to add middleware to be
+applied to all routes, just add it like regular middleware. If you want to have
+per-route middleware, use before/after filters.
+
+Here is an example of how to use passport and paper-router together. Notice the
+passport initialization is done according to the passport docs. The only trick
+is for sign in, so take notice of the AuthController in the example below.
+
+Use before filters to ensure the user is attached to the session (is logged
+in), if authentication is required for a given route.
+
+```javascript
+// app.js
+var app = express();
+
+passport.serializeUser( function( user, done ) {
+    done( null, user.id );
+});
+
+passport.deserializeUser( function( id, done ) {
+    var user = User.getbyId( id );
+    if ( user ) {
+      done( null, user );
+    } else {
+      done( new Error( 'User not found' ) );
+    }
+});
+
+passport.use( new LocalStrategy(
+    {
+        usernameField: 'email',
+        passwordField: 'password'
+    },
+    function( email, password, done ) {
+        var user = User.getByEmail( email );
+
+        if ( !user ) {
+            return done( null, false, { message: 'Incorrect email.' } );
+        }
+
+        if ( user.password != password ) {
+            return done( null, false, { message: 'Incorrect password.' } );
+        }
+
+        done( null, user );
+    }
+));
+
+var routes = function( router ) {
+    router.get( '/bananas', 'bananas#index', { as: 'bananas' } );
+    router.post( '/sign_in', 'auth#signIn', { as: 'signIn' } );
+};
+
+app.use( passport.initialize() );
+app.use( passport.session() );
+app.use( flash() );
+
+var router = new Router( app, path.join( dir, '/controllers' ), routes );
+
+var server = http.createServer( app );
+
+server.listen( process.env.PORT || 3333 );
+```
+
+```javascript
+// controllers/auth.js
+var passport = require( 'passport' );
+
+var AuthController = module.exports = {
+    signUp: function( req, res, next ) {
+        UserModel.createAndSave( req.body.email, req.body.password );
+    },
+
+    signIn: function( req, res, next ) {
+        passport.authenticate( 'local', function( err, user, info ) {
+            if ( err ) {
+                return next( err );
+            }
+
+            if ( !user ) {
+                req.flash( 'error', info.message );
+                return res.redirect( router.rootPath() );
+            }
+
+            req.logIn( user, function( err ) {
+                if ( err ) {
+                    return next( err );
+                }
+                return res.redirect( router.rootPath() );
+            });
+        })( req, res, next );
+    }
+};
+```
+
+```javascript
+var BananasController = module.exports =  {
+    before: [
+        { name: 'authenticate' }
+    ],
+
+    index: function( req, res, next ) {
+        res.send( Bananas.getAll() );
+    }
+};
+```

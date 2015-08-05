@@ -29,7 +29,7 @@ exports.regularRoutesAndControllers = function( test ) {
     client.get( '/foo', function( err, req, res, obj ) {
         test.ok( !err, 'No server error for foo#index' );
         test.ok( obj.objects[ 0 ].foo == 'bar' && obj.objects[ 1 ].foo2 == 'bar2', 'foo#index' );
-        test.ok( obj.requestId === undefined, 'foo#index' );
+        test.ok( obj.requestId === 123, 'foo#index' );
         test.ok( obj.controller == 'foo' );
         test.ok( obj.action == 'index' );
         if ( ++count == 7 ) {
