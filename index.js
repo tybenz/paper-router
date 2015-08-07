@@ -256,7 +256,7 @@ var Router = Class.extend({
 
                 for ( var i = 0, len = controller.before.length; i < len; i++ ) {
                     var options = controller.before[ i ];
-                    if ( ( !options.except && !options.before ) || ( options.except && options.except.indexOf( action ) == -1 ) ) {
+                    if ( ( !options.except && !options.only ) || ( options.except && options.except.indexOf( action ) == -1 ) ) {
                         if ( typeof controller[ options.name ] == 'function' ) {
                             args.push( controller[ options.name ].bind( controller ) );
                         } else {

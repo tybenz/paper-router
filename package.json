@@ -1,6 +1,6 @@
 {
   "name": "paper-router",
-  "version": "0.5.7",
+  "version": "0.5.8",
   "description": "convenience routing for restify/express",
   "main": "index.js",
   "repository": {

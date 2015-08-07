@@ -1,7 +1,7 @@
 var util = require( 'util' );
 
 exports.regularRoutesAndControllers = function( test ) {
-    test.expect( 21 );
+    test.expect( 26 );
     var restify = require( 'restify' );
 
     var client = restify.createJsonClient({
@@ -28,8 +28,9 @@ exports.regularRoutesAndControllers = function( test ) {
 
     client.get( '/foo', function( err, req, res, obj ) {
         test.ok( !err, 'No server error for foo#index' );
-        test.ok( obj.objects[ 0 ].foo == 'bar' && obj.objects[ 1 ].foo2 == 'bar2', 'foo#index' );
         test.ok( obj.requestId === 123, 'foo#index' );
+        test.ok( obj.name === undefined, 'foo#index' );
+        test.ok( obj.foo === 'bar', 'foo#index' );
         test.ok( obj.controller == 'foo' );
         test.ok( obj.action == 'index' );
         if ( ++count == 7 ) {
@@ -39,8 +40,9 @@ exports.regularRoutesAndControllers = function( test ) {
 
     client.get( '/foo/1', function( err, req, res, obj ) {
         test.ok( !err, 'No server error for foo#show' );
-        test.ok( obj.foo == 'bar', 'foo#show' );
         test.ok( obj.requestId == 123, 'foo#show' );
+        test.ok( obj.name === undefined, 'foo#show' );
+        test.ok( obj.foo === 'bar', 'foo#show' );
         if ( ++count == 7 ) {
             test.done();
         }
@@ -48,8 +50,9 @@ exports.regularRoutesAndControllers = function( test ) {
 
     client.post( '/foo', function( err, req, res, obj ) {
         test.ok( !err, 'No server error for foo#create' );
-        test.ok( obj.foo == 'bar', 'foo#create' );
         test.ok( obj.requestId == 123, 'foo#create' );
+        test.ok( obj.name === 'foo', 'foo#create' );
+        test.ok( obj.foo === 'bar', 'foo#create' );
         if ( ++count == 7 ) {
             test.done();
         }
@@ -57,8 +60,9 @@ exports.regularRoutesAndControllers = function( test ) {
 
     client.put( '/foo/1', function( err, req, res, obj ) {
         test.ok( !err, 'No server error for foo#update' );
-        test.ok( obj.foo == 'bar', 'foo#update' );
         test.ok( obj.requestId == 123, 'foo#update' );
+        test.ok( obj.name === 'foo', 'foo#update' );
+        test.ok( obj.foo === 'bar', 'foo#update' );
         if ( ++count == 7 ) {
             test.done();
         }
@@ -66,8 +70,9 @@ exports.regularRoutesAndControllers = function( test ) {
 
     client.del( '/foo/1', function( err, req, res, obj ) {
         test.ok( !err, 'No server error for foo#destroy' );
-        test.ok( obj.foo == 'bar', 'foo#destroy' );
         test.ok( obj.requestId == 123, 'foo#destroy' );
+        test.ok( obj.name === undefined, 'foo#destroy' );
+        test.ok( obj.foo === undefined, 'foo#destroy' );
         if ( ++count == 7 ) {
             test.done();
         }
