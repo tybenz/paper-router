@@ -214,7 +214,7 @@ an integer.
 
 Example directory structure:
 
-```python
+```
 |-- src
 |   |-- controllers
 |   |   |-- v0
