@@ -64,7 +64,7 @@ Here's what the route declaration for both of those actions would look:
 // routes.js
 module.exports = function( router ) {
     router.get( '/bananas', 'bananas#index' );
-    router.get( '/bananas/:id', bananas#show' );
+    router.get( '/bananas/:id', 'bananas#show' );
 }
 ```
 
