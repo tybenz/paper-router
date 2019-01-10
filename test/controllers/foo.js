@@ -47,6 +47,14 @@ var FooController = {
         });
     },
 
+    patch: function ( req, res, next ) {
+        res.send({
+            requestId: req.id,
+            name: req.name,
+            foo: req.foo
+        });
+    },
+
     update: function( req, res, next ) {
         res.send({
             requestId: req.id,

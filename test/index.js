@@ -1,7 +1,8 @@
 var util = require( 'util' );
+var server;
 
 exports.regularRoutesAndControllers = function( test ) {
-    test.expect( 26 );
+    test.expect( 27 );
     var restify = require( 'restify' );
 
     var client = restify.createJsonClient({
@@ -12,6 +13,7 @@ exports.regularRoutesAndControllers = function( test ) {
     var Router = require( '../' );
     var router = new Router( this.server, __dirname + '/controllers', function( router ) {
         router.resources( 'foo' );
+        router.patch( '/foo', 'foo#patch' );
         router.get( '/bar/baz', 'bar#baz' );
         router.get( '/class', 'class#route' );
     });
@@ -21,7 +23,7 @@ exports.regularRoutesAndControllers = function( test ) {
     client.get( '/class', function( err, req, res, obj ) {
         test.ok( !err, 'No server error for class#route' );
         test.ok( obj.foo == 'bar', 'class#route' );
-        if ( ++count == 7 ) {
+        if ( ++count == 8 ) {
             test.done();
         }
     });
@@ -33,7 +35,7 @@ exports.regularRoutesAndControllers = function( test ) {
         test.ok( obj.foo === 'bar', 'foo#index' );
         test.ok( obj.controller == 'foo' );
         test.ok( obj.action == 'index' );
-        if ( ++count == 7 ) {
+        if ( ++count == 8 ) {
             test.done();
         }
     });
@@ -43,7 +45,7 @@ exports.regularRoutesAndControllers = function( test ) {
         test.ok( obj.requestId == 123, 'foo#show' );
         test.ok( obj.name === undefined, 'foo#show' );
         test.ok( obj.foo === 'bar', 'foo#show' );
-        if ( ++count == 7 ) {
+        if ( ++count == 8 ) {
             test.done();
         }
     });
@@ -53,7 +55,16 @@ exports.regularRoutesAndControllers = function( test ) {
         test.ok( obj.requestId == 123, 'foo#create' );
         test.ok( obj.name === 'foo', 'foo#create' );
         test.ok( obj.foo === 'bar', 'foo#create' );
-        if ( ++count == 7 ) {
+        if ( ++count == 8 ) {
+            test.done();
+        }
+    });
+
+    // XXX restify does not allow patch to be called the same way as other HTTP methods
+    // for now, just validate that no exception is thrown on attempting the call
+    client.patch( '/foo', function ( err, req, res, obj ) {
+        test.ok( true, 'Calling patch on server works' );
+        if ( ++count == 8 ) {
             test.done();
         }
     });
@@ -63,7 +74,7 @@ exports.regularRoutesAndControllers = function( test ) {
         test.ok( obj.requestId == 123, 'foo#update' );
         test.ok( obj.name === 'foo', 'foo#update' );
         test.ok( obj.foo === 'bar', 'foo#update' );
-        if ( ++count == 7 ) {
+        if ( ++count == 8 ) {
             test.done();
         }
     });
@@ -73,7 +84,7 @@ exports.regularRoutesAndControllers = function( test ) {
         test.ok( obj.requestId == 123, 'foo#destroy' );
         test.ok( obj.name === undefined, 'foo#destroy' );
         test.ok( obj.foo === undefined, 'foo#destroy' );
-        if ( ++count == 7 ) {
+        if ( ++count == 8 ) {
             test.done();
         }
     });
@@ -81,7 +92,7 @@ exports.regularRoutesAndControllers = function( test ) {
     client.get( '/bar/baz', function( err, req, res, obj ) {
         test.ok( !err, 'No server error for bar#baz' );
         test.ok( obj.bar == 'baz', 'bar#baz' );
-        if ( ++count == 7 ) {
+        if ( ++count == 8 ) {
             test.done();
         }
     });
@@ -367,6 +378,8 @@ exports.setUp = function( callback ) {
 };
 
 exports.tearDown = function( callback ) {
-    this.server.close();
+    if (this.server) {
+        this.server.close();
+    }
     callback();
 };

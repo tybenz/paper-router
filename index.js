@@ -46,6 +46,7 @@ var Router = Class.extend({
             resources: this.resources.bind( this ),
             get: this.get.bind( this ),
             post: this.post.bind( this ),
+            patch: this.post.bind( this ),
             put: this.put.bind( this ),
             del: this.del.bind( this ),
             delete: this.delete.bind( this )
@@ -99,6 +100,15 @@ var Router = Class.extend({
         action = controllerAction[ 1 ];
 
         this.bindRoute( 'post', path, this.controllers[ controller + ( options.version ? ':' + options.version : '' ) ], controller, action, options.as );
+    },
+
+    patch: function( path, action, options ) {
+        options = options || {};
+        var controllerAction = action.split( '#' );
+        var controller = controllerAction[ 0 ];
+        action = controllerAction[ 1 ];
+
+        this.bindRoute( 'patch', path, this.controllers[ controller + ( options.version ? ':' + options.version : '' ) ], controller, action, options.as );
     },
 
     put: function( path, action, options ) {
